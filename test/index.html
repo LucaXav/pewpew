@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PewPew — overlay test harness</title>
+    <link rel="stylesheet" href="../renderer/style.css" />
+    <style>
+      /* Fake "code behind the overlay" so the transparent game can be seen
+         floating on top — this stands in for your editor in a real browser. */
+      html,
+      body {
+        background: #0b0e14;
+      }
+      #codebg {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        margin: 0;
+        padding: 22px 26px;
+        color: #3f4d63;
+        font: 13px/1.55 "Courier New", monospace;
+        white-space: pre-wrap;
+        overflow: hidden;
+        pointer-events: none;
+      }
+      .k {
+        color: #5b7aa8;
+      }
+      .s {
+        color: #4a6b52;
+      }
+    </style>
+  </head>
+  <body>
+    <pre id="codebg"></pre>
+
+    <canvas id="game"></canvas>
+    <div id="hud" class="chrome">
+      <div id="grip" title="Drag to move the overlay">⠿ PEWPEW</div>
+      <div id="score">SCORE 0</div>
+      <div id="hiscore">HI 0</div>
+      <div id="lives">♦ ♦ ♦</div>
+      <div id="mode">MODE: PLAY</div>
+    </div>
+    <div id="hints" class="chrome">
+      <span><b>← →</b> turn</span>
+      <span><b>↑</b> thrust</span>
+      <span><b>SPACE</b> fire</span>
+      <span><b>^⇧O</b> click-through</span>
+      <span><b>^⇧G</b> play/ambient</span>
+      <span><b>^⇧P</b> pause</span>
+      <span><b>^⇧Q</b> quit</span>
+    </div>
+    <button id="handle">◉ CONTROL</button>
+    <div id="banner" class="chrome hidden">
+      <div id="banner-title">PEWPEW</div>
+      <div id="banner-sub">PRESS SPACE / FIRE TO START</div>
+    </div>
+
+    <script>
+      // Fill the background with believable source code lines.
+      const lines = [
+        'const overlay = new BrowserWindow({ transparent: true, frame: false });',
+        'overlay.setIgnoreMouseEvents(true, { forward: true });',
+        'function update(dt) { ship.x += ship.vx * dt; wrap(ship); }',
+        'for (const a of asteroids) { a.x += a.vx * dt; a.a += a.spin * dt; }',
+        'if (Math.hypot(a.x - b.x, a.y - b.y) < a.r) splitAsteroid(j);',
+        'globalShortcut.register("CommandOrControl+Shift+O", toggleThrough);',
+        'ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; drawAsteroid(a);',
+        'requestAnimationFrame(loop); // 60fps render of the white wireframe',
+      ];
+      let out = "";
+      for (let i = 0; i < 60; i++) {
+        out += String(i + 1).padStart(3, " ") + "  " + lines[i % lines.length] + "\n";
+      }
+      document.getElementById("codebg").textContent = out;
+    </script>
+    <script src="../renderer/game.js"></script>
+  </body>
+</html>

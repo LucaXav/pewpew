@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PewPew</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Transparent game surface. Everything is drawn in white on alpha 0. -->
+    <canvas id="game"></canvas>
+
+    <!-- HUD: score / lives / mode. Top-right by default. -->
+    <div id="hud" class="chrome">
+      <div id="grip" title="Drag to move the overlay">⠿ PEWPEW</div>
+      <div id="score">SCORE 0</div>
+      <div id="hiscore">HI 0</div>
+      <div id="lives">♦ ♦ ♦</div>
+      <div id="mode">MODE: PLAY</div>
+    </div>
+
+    <!-- Bottom hint bar with the shortcuts. Hidden in click-through. -->
+    <div id="hints" class="chrome">
+      <span><b>← →</b> turn</span>
+      <span><b>↑</b> thrust</span>
+      <span><b>SPACE</b> fire</span>
+      <span><b>^⇧O</b> click-through</span>
+      <span><b>^⇧G</b> play/ambient</span>
+      <span><b>^⇧P</b> pause</span>
+      <span><b>^⇧Q</b> quit</span>
+    </div>
+
+    <!-- Come-back handle: the only thing clickable while click-through is on. -->
+    <button id="handle" title="Click to take control / exit click-through">
+      ◉ CONTROL
+    </button>
+
+    <!-- Game-over / start banner -->
+    <div id="banner" class="chrome hidden">
+      <div id="banner-title">PEWPEW</div>
+      <div id="banner-sub">PRESS SPACE / FIRE TO START</div>
+    </div>
+
+    <script src="game.js"></script>
+  </body>
+</html>

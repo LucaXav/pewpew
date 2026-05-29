@@ -1,0 +1,155 @@
+/* Every layer must be transparent for the overlay to show your work behind it. */
+:root {
+  --ink: #ffffff;
+  --glow: 0 0 6px rgba(255, 255, 255, 0.55);
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent; /* critical: no opaque page background */
+  overflow: hidden;
+  cursor: crosshair;
+  font-family: "Courier New", ui-monospace, monospace;
+}
+
+#game {
+  position: fixed;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Shared chrome look: white, pixel-ish, glowing. */
+.chrome {
+  position: fixed;
+  z-index: 10;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-shadow: var(--glow);
+  pointer-events: none; /* never block the game; specific bits opt back in */
+}
+
+/* HUD top-right */
+#hud {
+  top: 16px;
+  right: 18px;
+  text-align: right;
+  font-size: 15px;
+  line-height: 1.7;
+  font-weight: bold;
+}
+#grip {
+  font-size: 12px;
+  opacity: 0.7;
+  letter-spacing: 4px;
+  -webkit-app-region: drag; /* drag this to move the overlay */
+  pointer-events: auto;
+  cursor: grab;
+}
+#score {
+  font-size: 22px;
+}
+#hiscore {
+  font-size: 12px;
+  opacity: 0.75;
+}
+#lives {
+  font-size: 18px;
+  letter-spacing: 4px;
+}
+#mode {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+/* Hints bottom-center */
+#hints {
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  opacity: 0.6;
+  white-space: nowrap;
+}
+#hints b {
+  color: #fff;
+  opacity: 1;
+}
+
+/* Come-back handle: hidden until click-through is on. */
+#handle {
+  position: fixed;
+  z-index: 20;
+  top: 14px;
+  left: 14px;
+  display: none; /* shown only during click-through */
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: bold;
+  letter-spacing: 2px;
+  color: #000;
+  background: #fff;
+  border: 2px solid #fff;
+  border-radius: 4px;
+  box-shadow: var(--glow);
+  cursor: pointer;
+  pointer-events: auto;
+}
+#handle:hover {
+  background: #cfcfcf;
+}
+
+/* Center banner */
+#banner {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+#banner-title {
+  font-size: 64px;
+  font-weight: bold;
+  letter-spacing: 10px;
+}
+#banner-sub {
+  margin-top: 12px;
+  font-size: 16px;
+  letter-spacing: 4px;
+  opacity: 0.85;
+  animation: blink 1.1s steps(2, start) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.15;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* When click-through is active we add .through to <body> to hide the chrome
+   so only the white graphics float over your code. */
+body.through #hud,
+body.through #hints,
+body.through #banner {
+  opacity: 0.28;
+}
+body.through #grip {
+  pointer-events: none;
+}

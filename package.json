@@ -1,0 +1,24 @@
+{
+  "name": "pewpew",
+  "version": "1.0.0",
+  "description": "PewPew — a click-through, transparent, always-on-top 8-bit Asteroids game that overlays directly on your screen while you code behind it.",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node tools/serve.js"
+  },
+  "keywords": [
+    "electron",
+    "overlay",
+    "asteroids",
+    "game",
+    "transparent",
+    "always-on-top",
+    "click-through"
+  ],
+  "author": "LucaXav",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.2.0"
+  }
+}
