@@ -59,8 +59,10 @@ underneath.
 
 ### Moving, resizing & the controls
 
-- **Move:** drag the top-left control bar (the gaps between the icons).
-- **Fullscreen:** double-click that bar (double-click again to restore).
+- **Move:** just **click and drag anywhere** on the overlay — the whole surface
+  is a drag handle, so you can throw it across monitors easily.
+- **Fullscreen:** **double-click the top-left corner** (the controls area) to
+  fill the screen; double-click again to restore the previous size.
 - **Resize:** drag any of the 8 grips on the white outline that traces the
   window edge. (Native edge-drag also works.)
 - **Show/hide controls:** the icon cluster and resize outline fade out after a
@@ -87,6 +89,29 @@ npm start        # launches the overlay
 
 That's it. The overlay opens on top of everything. Press `Ctrl/Cmd+Shift+Q` to
 quit.
+
+### Put it on your Desktop + a global hotkey
+
+To get a **PewPew icon on your Desktop and Start Menu** (with the app logo) and a
+**global launch hotkey**:
+
+```bash
+npm run install-desktop
+```
+
+This creates `PewPew` shortcuts that launch the overlay with no console window,
+and binds them to **`Ctrl + Shift + F7`** — press it anywhere to open PewPew (if
+it's already running, the hotkey just brings it to the front). Windows only.
+
+### Launch from the command line
+
+```bash
+npm start            # from the project folder
+
+# or install a global `pewpew` command:
+npm install -g .     # (or: npm link)
+pewpew               # launches the overlay from anywhere
+```
 
 ### Try the game in a plain browser (no Electron)
 
@@ -124,15 +149,20 @@ are drawn and the desktop shows through everywhere else.
 
 ```
 pewpew/
-├── main.js            # Electron main process (window, click-through, shortcuts)
-├── preload.js         # contextBridge API (window.pew)
+├── main.js                  # Electron main (window, click-through, move/resize, shortcuts)
+├── preload.js               # contextBridge API (window.pew)
+├── bin/pewpew.js            # `pewpew` CLI launcher
 ├── renderer/
-│   ├── index.html     # overlay markup (canvas + HUD + handle)
-│   ├── style.css      # transparent, white, pixel-ish styling
-│   └── game.js        # the Asteroids engine
-├── tools/serve.js     # zero-dep static server for browser testing
-├── test/index.html    # browser test harness (fake code background)
-└── docs/              # screenshots
+│   ├── index.html           # overlay markup (canvas + drag surface + HUD + controls)
+│   ├── style.css            # transparent, white, pixel-ish styling
+│   └── game.js              # the Asteroids engine + chrome/move/resize logic
+├── assets/                  # generated app icon (pewpew.png / pewpew.ico)
+├── tools/
+│   ├── serve.js             # zero-dep static server for browser testing
+│   ├── make-icon.js         # procedural icon generator (PNG + ICO)
+│   └── install-shortcut.ps1 # creates the Desktop/Start-Menu shortcut + hotkey
+├── test/index.html          # browser test harness (fake code background)
+└── docs/                    # screenshots
 ```
 
 ---

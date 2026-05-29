@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "description": "PewPew — a click-through, transparent, always-on-top 8-bit Asteroids game that overlays directly on your screen while you code behind it.",
   "main": "main.js",
+  "bin": {
+    "pewpew": "bin/pewpew.js"
+  },
   "scripts": {
     "start": "electron .",
-    "serve": "node tools/serve.js"
+    "serve": "node tools/serve.js",
+    "make-icon": "node tools/make-icon.js",
+    "install-desktop": "powershell -NoProfile -ExecutionPolicy Bypass -File tools/install-shortcut.ps1",
+    "postinstall": "node tools/make-icon.js"
   },
   "keywords": [
     "electron",

@@ -2,14 +2,36 @@
 // Main process: window creation, click-through wiring, global shortcuts, IPC.
 const { app, BrowserWindow, ipcMain, globalShortcut, screen } = require("electron");
 const path = require("path");
+const fs = require("fs");
 
-// Only one overlay at a time. A relaunch no-ops while one is running.
-if (!app.requestSingleInstanceLock()) {
+// Only one overlay at a time. If a second copy is launched (e.g. via the
+// Ctrl+Shift+F7 desktop-shortcut hotkey), focus the existing one instead.
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
   app.quit();
+} else {
+  app.on("second-instance", () => revealWindow());
 }
 
 let win = null;
 let through = false; // click-through state (input falls through to apps behind)
+
+// Window/taskbar icon if it has been generated (npm run make-icon).
+const ICON = (() => {
+  for (const f of ["pewpew.ico", "pewpew.png"]) {
+    const p = path.join(__dirname, "assets", f);
+    if (fs.existsSync(p)) return p;
+  }
+  return undefined;
+})();
+
+function revealWindow() {
+  if (!win) return;
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+  win.setAlwaysOnTop(true, "screen-saver");
+}
 
 function createWindow() {
   const preload = path.join(__dirname, "preload.js");
@@ -21,8 +43,11 @@ function createWindow() {
     alwaysOnTop: true, // float above other apps
     hasShadow: false,
     resizable: true, // drag the edges to resize the play area
+    maximizable: false, // native maximize misbehaves on transparent frameless;
+    // fullscreen is done explicitly via setBounds(workArea) instead
     skipTaskbar: false,
     fullscreenable: false,
+    icon: ICON,
     webPreferences: {
       preload,
       backgroundThrottling: false, // keep the game running when unfocused
@@ -127,10 +152,14 @@ ipcMain.on("set-interactive", (_e, interactive) => {
 
 ipcMain.on("quit", () => app.quit());
 
-// --- Move / resize / fullscreen (driven by the renderer chrome) -------------
+// --- Resize / fullscreen (driven by the renderer chrome) --------------------
+// Moving is handled natively by the `-webkit-app-region: drag` surface; the
+// resize grips and the fullscreen toggle come through IPC. Native maximize
+// misbehaves on a transparent frameless window, so "fullscreen" = fill the
+// display work area via setBounds, remembering the previous size to restore.
 const MIN_W = 320;
 const MIN_H = 240;
-let savedBounds = null; // bounds to restore from fullscreen
+let savedBounds = null;
 let isFull = false;
 
 ipcMain.handle("win-get-bounds", () => (win ? win.getBounds() : null));
@@ -143,11 +172,10 @@ ipcMain.on("win-set-bounds", (_e, b) => {
     width: Math.max(MIN_W, Math.round(b.width)),
     height: Math.max(MIN_H, Math.round(b.height)),
   });
-  isFull = false; // a manual move/resize leaves fullscreen
+  isFull = false; // a manual resize leaves fullscreen
   win.webContents.send("full-state", false);
 });
 
-// Double-click toggles full work-area <-> the previous size.
 ipcMain.on("win-toggle-full", () => {
   if (!win) return;
   const d = screen.getDisplayMatching(win.getBounds());

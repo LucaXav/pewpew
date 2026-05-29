@@ -80,6 +80,7 @@
     bannerSub: document.getElementById("banner-sub"),
     controls: document.getElementById("controls"),
     frame: document.getElementById("frame"),
+    revealzone: document.getElementById("revealzone"),
     scorepop: document.getElementById("scorepop"),
     btnThrough: document.getElementById("btn-through"),
     btnMode: document.getElementById("btn-mode"),
@@ -538,26 +539,16 @@
     if (bridge) cachedBounds = await bridge.getBounds();
   }
 
-  // --- move (drag the controls bar) ---
-  function beginMove(e) {
-    if (throughOn || !bridge || !cachedBounds) return;
-    drag = {
-      mode: "move",
-      grabX: e.screenX - cachedBounds.x,
-      grabY: e.screenY - cachedBounds.y,
-    };
-    document.body.classList.add("managing");
-    try {
-      e.currentTarget.setPointerCapture(e.pointerId);
-    } catch (_) {}
-  }
+  // Moving the window is handled natively: the whole surface is a
+  // `-webkit-app-region: drag` region, so you can grab it anywhere and throw it
+  // around smoothly, and double-clicking it maximizes (toggles fullscreen).
+  // Only resizing needs JS, via the grips below.
 
   // --- resize (drag a grip) ---
   function beginResize(e, edge) {
     if (throughOn || !bridge || !cachedBounds) return;
     e.stopPropagation();
     drag = {
-      mode: "resize",
       edge,
       start: { ...cachedBounds },
       sx: e.screenX,
@@ -569,11 +560,11 @@
     } catch (_) {}
   }
 
-  function onPointerMove(e) {
-    // Reveal when the cursor is in the top-left zone or over the chrome.
+  // Hover: reveal the chrome near the top-left, and keep the come-back buttons
+  // clickable while click-through is on. Bound to both mouse + pointer move so
+  // it works with the forwarded events we get during click-through.
+  function onHover(e) {
     if (e.clientX < REVEAL_W && e.clientY < REVEAL_H) revealChrome();
-
-    // Keep the come-back buttons clickable while click-through is on.
     if (throughOn && bridge) {
       const r = el.controls.getBoundingClientRect();
       const pad = 8;
@@ -585,42 +576,38 @@
       bridge.setInteractive(over);
       if (over) revealChrome();
     }
+  }
 
+  // Active resize drag.
+  function onResizeMove(e) {
     if (!drag || !bridge) return;
     revealChrome();
-    if (drag.mode === "move") {
-      const x = e.screenX - drag.grabX;
-      const y = e.screenY - drag.grabY;
-      cachedBounds = { ...cachedBounds, x, y };
-      bridge.setBounds(cachedBounds);
-    } else {
-      const MINW = 320,
-        MINH = 240;
-      let { x, y, width, height } = drag.start;
-      const dx = e.screenX - drag.sx;
-      const dy = e.screenY - drag.sy;
-      const ed = drag.edge;
-      if (ed.includes("e")) width = drag.start.width + dx;
-      if (ed.includes("s")) height = drag.start.height + dy;
-      if (ed.includes("w")) {
-        width = drag.start.width - dx;
-        x = drag.start.x + dx;
-      }
-      if (ed.includes("n")) {
-        height = drag.start.height - dy;
-        y = drag.start.y + dy;
-      }
-      if (width < MINW) {
-        if (ed.includes("w")) x -= MINW - width;
-        width = MINW;
-      }
-      if (height < MINH) {
-        if (ed.includes("n")) y -= MINH - height;
-        height = MINH;
-      }
-      cachedBounds = { x, y, width, height };
-      bridge.setBounds(cachedBounds);
+    const MINW = 320,
+      MINH = 240;
+    let { x, y, width, height } = drag.start;
+    const dx = e.screenX - drag.sx;
+    const dy = e.screenY - drag.sy;
+    const ed = drag.edge;
+    if (ed.includes("e")) width = drag.start.width + dx;
+    if (ed.includes("s")) height = drag.start.height + dy;
+    if (ed.includes("w")) {
+      width = drag.start.width - dx;
+      x = drag.start.x + dx;
     }
+    if (ed.includes("n")) {
+      height = drag.start.height - dy;
+      y = drag.start.y + dy;
+    }
+    if (width < MINW) {
+      if (ed.includes("w")) x -= MINW - width;
+      width = MINW;
+    }
+    if (height < MINH) {
+      if (ed.includes("n")) y -= MINH - height;
+      height = MINH;
+    }
+    cachedBounds = { x, y, width, height };
+    bridge.setBounds(cachedBounds);
   }
   function onPointerUp() {
     if (!drag) return;
@@ -636,27 +623,29 @@
     el.btnPause.addEventListener("click", togglePause);
     el.btnQuit.addEventListener("click", () => bridge && bridge.quit());
 
-    // Drag the bar (but not a button) to move; double-click to go fullscreen.
-    el.controls.addEventListener("pointerdown", (e) => {
-      if (e.target.closest("button")) return;
-      beginMove(e);
-    });
-    el.controls.addEventListener("dblclick", (e) => {
-      if (e.target.closest("button")) return;
-      if (!throughOn && bridge) bridge.toggleFull();
-    });
-
-    // Resize grips.
+    // Resize grips (the rest of the surface is a native drag region).
     el.frame.querySelectorAll(".grip").forEach((g) => {
       g.addEventListener("pointerdown", (e) => beginResize(e, g.dataset.edge));
     });
 
-    window.addEventListener("pointermove", onPointerMove);
+    // Double-click the top-left (controls bar / reveal zone) to toggle
+    // fullscreen. The drag surface itself is a native drag region, which
+    // swallows dblclick, so we listen on these no-drag spots instead.
+    const dblFull = (e) => {
+      if (e.target.closest && e.target.closest("button")) return;
+      if (!throughOn && bridge) bridge.toggleFull();
+    };
+    el.controls.addEventListener("dblclick", dblFull);
+    if (el.revealzone) {
+      el.revealzone.addEventListener("dblclick", dblFull);
+      el.revealzone.addEventListener("mousemove", revealChrome);
+    }
+    window.addEventListener("mousemove", onHover);
+    window.addEventListener("pointermove", onHover);
+    window.addEventListener("pointermove", onResizeMove);
     window.addEventListener("pointerup", onPointerUp);
-    // Keep cached bounds fresh after any (incl. native edge) resize.
+    // Keep cached bounds fresh after any (incl. native) resize.
     window.addEventListener("resize", refreshBounds);
-    // Any keypress counts as activity worth showing the chrome briefly? No —
-    // keep gameplay clean. Reveal only via mouse near the corner.
   }
 
   setupControls();
@@ -689,7 +678,7 @@
           "<span><b>&larr; &rarr;</b> turn</span>" +
           "<span><b>&uarr;</b> thrust</span>" +
           "<span><b>SPACE</b> fire</span>" +
-          "<span><b>drag top-left</b> move</span>" +
+          "<span><b>drag</b> move</span>" +
           "<span><b>dbl-click</b> fullscreen</span>" +
           `<span><b>${pretty(map.through)}</b> through</span>` +
           `<span><b>${pretty(map.quit)}</b> quit</span>`;

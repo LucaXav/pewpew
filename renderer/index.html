@@ -10,6 +10,13 @@
     <!-- Transparent game surface. Everything is drawn in white on alpha 0. -->
     <canvas id="game"></canvas>
 
+    <!-- Native OS drag region: grab anywhere to move the window, double-click to
+         toggle fullscreen. Interactive bits (buttons/grips) opt out via no-drag. -->
+    <div id="dragsurface"></div>
+    <!-- Keeps hover events alive in the top-left so the controls can be revealed
+         (a drag region can swallow mousemove). -->
+    <div id="revealzone"></div>
+
     <!-- Resize frame: a white outline of the window edge + 8 grips you can drag
          to scale the overlay. Auto-hides with the rest of the chrome. -->
     <div id="frame" aria-hidden="true">
@@ -38,14 +45,13 @@
       <span><b>&larr; &rarr;</b> turn</span>
       <span><b>&uarr;</b> thrust</span>
       <span><b>SPACE</b> fire</span>
-      <span><b>drag top-left</b> move</span>
+      <span><b>drag</b> move</span>
       <span><b>dbl-click</b> fullscreen</span>
     </div>
 
-    <!-- Icon-only control cluster, top-left. Drag the bar to move the window,
-         double-click it to toggle fullscreen. Auto-hides; jiggle the mouse in
-         the top-left corner to bring it back. X is furthest left. -->
-    <div id="controls" title="Drag to move · double-click for fullscreen">
+    <!-- Icon-only control cluster, top-left. Auto-hides; jiggle the mouse in the
+         top-left corner to bring it back. X is furthest left. -->
+    <div id="controls">
       <button id="btn-quit" class="ic" title="Quit PewPew">
         <svg viewBox="0 0 24 24"><path d="M5 5 L19 19 M19 5 L5 19" /></svg>
       </button>

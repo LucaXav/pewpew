@@ -28,6 +28,34 @@ body {
   display: block;
   width: 100%;
   height: 100%;
+  z-index: 0;
+  pointer-events: none; /* drag handled by #dragsurface above it */
+}
+
+/* The whole window is a native drag region — grab anywhere to move it,
+   double-click to maximize. Interactive widgets opt out with no-drag. */
+#dragsurface {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  background: transparent;
+  cursor: grab;
+  -webkit-app-region: drag;
+}
+#dragsurface:active {
+  cursor: grabbing;
+}
+/* Transparent hover-catcher in the top-left so the controls can be revealed
+   even though the surrounding surface is a (mousemove-swallowing) drag region. */
+#revealzone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 340px;
+  height: 140px;
+  z-index: 18;
+  background: transparent;
+  -webkit-app-region: no-drag;
 }
 
 /* Shared chrome look: white, pixel-ish, glowing. */
@@ -129,12 +157,10 @@ body {
   gap: 6px;
   padding: 4px;
   pointer-events: auto;
-  cursor: grab; /* the bar itself is the move handle */
-}
-#controls:active {
-  cursor: grabbing;
+  -webkit-app-region: no-drag; /* clickable island over the drag surface */
 }
 #controls .ic {
+  -webkit-app-region: no-drag;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -178,19 +204,20 @@ body.through #btn-through {
 #frame {
   position: fixed;
   inset: 0;
-  z-index: 15;
+  z-index: 19; /* above #revealzone so the grips stay grabbable */
   pointer-events: none;
   border: 1.5px dashed rgba(255, 255, 255, 0.55);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 #frame .grip {
   position: absolute;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   background: rgba(0, 0, 0, 0.4);
   border: 1.5px solid #fff;
   box-shadow: var(--glow);
   pointer-events: auto;
+  -webkit-app-region: no-drag;
 }
 #frame .grip[data-edge="nw"] { top: -2px; left: -2px; cursor: nwse-resize; }
 #frame .grip[data-edge="ne"] { top: -2px; right: -2px; cursor: nesw-resize; }
