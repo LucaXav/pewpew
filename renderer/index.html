@@ -30,10 +30,14 @@
       <span><b>^⇧Q</b> quit</span>
     </div>
 
-    <!-- Come-back handle: the only thing clickable while click-through is on. -->
-    <button id="handle" title="Click to take control / exit click-through">
-      ◉ CONTROL
-    </button>
+    <!-- Always-available control cluster (top-left). Clickable even during
+         click-through (hit-tested), so you never lose control of the overlay. -->
+    <div id="controls">
+      <button id="btn-through" title="Toggle click-through (let clicks fall through to apps behind)">◐ THROUGH</button>
+      <button id="btn-mode" title="Toggle Play / Ambient">⇄ MODE</button>
+      <button id="btn-pause" title="Pause / resume">⏸ PAUSE</button>
+      <button id="btn-quit" title="Quit PewPew">✕ QUIT</button>
+    </div>
 
     <!-- Game-over / start banner -->
     <div id="banner" class="chrome hidden">

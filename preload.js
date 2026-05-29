@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("pew", {
   // Mode / pause toggles fired by global shortcuts.
   onToggleMode: (cb) => ipcRenderer.on("toggle-mode", () => cb()),
   onTogglePause: (cb) => ipcRenderer.on("toggle-pause", () => cb()),
+  // Which global shortcuts actually bound (so the HUD shows correct hints).
+  onShortcuts: (cb) => ipcRenderer.on("shortcuts", (_e, map) => cb(map)),
   quit: () => ipcRenderer.send("quit"),
   getState: () => ipcRenderer.invoke("get-state"),
 });

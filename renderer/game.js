@@ -77,7 +77,11 @@
     banner: document.getElementById("banner"),
     bannerTitle: document.getElementById("banner-title"),
     bannerSub: document.getElementById("banner-sub"),
-    handle: document.getElementById("handle"),
+    controls: document.getElementById("controls"),
+    btnThrough: document.getElementById("btn-through"),
+    btnMode: document.getElementById("btn-mode"),
+    btnPause: document.getElementById("btn-pause"),
+    btnQuit: document.getElementById("btn-quit"),
   };
 
   function updateHUD() {
@@ -472,40 +476,76 @@
     requestAnimationFrame(loop);
   }
 
-  // --- Click-through handle (Electron) --------------------------------------
-  // While click-through is on the whole window ignores the mouse; we still get
-  // forwarded mousemove events, so we hit-test the handle and make just that
-  // spot interactive so it can be clicked to take control back.
+  // --- Controls + click-through (Electron) ----------------------------------
+  // The control cluster works in both states. When click-through is on the
+  // whole window ignores the mouse, but we still receive forwarded mousemove
+  // events: we hit-test the cluster and make just that region interactive so
+  // its buttons stay clickable — you never lose control of the overlay.
   let throughOn = false;
-  function setupHandle() {
-    el.handle.addEventListener("click", () => {
-      if (bridge) bridge.setThrough(false);
+  function toggleMode() {
+    setMode(displayMode === "play" ? "ambient" : "play");
+  }
+  function setupControls() {
+    el.btnThrough.addEventListener("click", () => {
+      if (bridge) bridge.setThrough(!throughOn);
     });
+    el.btnMode.addEventListener("click", toggleMode);
+    el.btnPause.addEventListener("click", () => {
+      paused = !paused;
+    });
+    el.btnQuit.addEventListener("click", () => {
+      if (bridge) bridge.quit();
+    });
+
     window.addEventListener("mousemove", (e) => {
       if (!throughOn || !bridge) return;
-      const r = el.handle.getBoundingClientRect();
+      const r = el.controls.getBoundingClientRect();
+      const pad = 6;
       const over =
-        e.clientX >= r.left &&
-        e.clientX <= r.right &&
-        e.clientY >= r.top &&
-        e.clientY <= r.bottom;
+        e.clientX >= r.left - pad &&
+        e.clientX <= r.right + pad &&
+        e.clientY >= r.top - pad &&
+        e.clientY <= r.bottom + pad;
       bridge.setInteractive(over);
     });
   }
+
+  // Always wire the buttons (they work in a browser too, minus quit/through).
+  setupControls();
 
   if (bridge) {
     bridge.onThrough((on) => {
       throughOn = on;
       document.body.classList.toggle("through", on);
-      el.handle.style.display = on ? "block" : "none";
       // Coupling: click-through implies you're working behind it -> ambient.
       setMode(on ? "ambient" : "play");
     });
-    bridge.onToggleMode(() => setMode(displayMode === "play" ? "ambient" : "play"));
+    bridge.onToggleMode(toggleMode);
     bridge.onTogglePause(() => {
       paused = !paused;
     });
-    setupHandle();
+    bridge.onShortcuts((map) => {
+      // Reflect the keys that actually bound into the bottom hint bar.
+      const pretty = (a) =>
+        a
+          ? a
+              .replace("CommandOrControl", "^")
+              .replace("Shift", "⇧")
+              .replace("Alt", "⌥")
+              .replace(/\+/g, "")
+          : "(unbound)";
+      const hints = document.getElementById("hints");
+      if (hints) {
+        hints.innerHTML =
+          "<span><b>← →</b> turn</span>" +
+          "<span><b>↑</b> thrust</span>" +
+          "<span><b>SPACE</b> fire</span>" +
+          `<span><b>${pretty(map.through)}</b> through</span>` +
+          `<span><b>${pretty(map.mode)}</b> play/ambient</span>` +
+          `<span><b>${pretty(map.pause)}</b> pause</span>` +
+          `<span><b>${pretty(map.quit)}</b> quit</span>`;
+      }
+    });
   }
 
   // --- Boot ------------------------------------------------------------------
