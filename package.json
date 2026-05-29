@@ -1,10 +1,10 @@
 {
-  "name": "pewpew",
+  "name": "vibeshift",
   "version": "1.0.0",
-  "description": "PewPew — a click-through, transparent, always-on-top 8-bit Asteroids game that overlays directly on your screen while you code behind it.",
+  "description": "Vibe Shift — a click-through, transparent, always-on-top 8-bit Asteroids game that floats over your terminal so you can blast rocks while you vibecode, then shift straight back to your prompt.",
   "main": "main.js",
   "bin": {
-    "pewpew": "bin/pewpew.js"
+    "vibeshift": "bin/vibeshift.js"
   },
   "scripts": {
     "start": "electron .",
@@ -20,10 +20,20 @@
     "game",
     "transparent",
     "always-on-top",
-    "click-through"
+    "click-through",
+    "vibecoding",
+    "terminal"
   ],
   "author": "LucaXav",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LucaXav/vibeshift.git"
+  },
+  "homepage": "https://github.com/LucaXav/vibeshift#readme",
+  "bugs": {
+    "url": "https://github.com/LucaXav/vibeshift/issues"
+  },
   "devDependencies": {
     "electron": "^33.2.0"
   }

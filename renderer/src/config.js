@@ -7,6 +7,31 @@ export const TAU = Math.PI * 2;
 export const SIZES = { 3: 56, 2: 32, 1: 16 };
 export const SCORES = { 3: 20, 2: 50, 1: 100 };
 
+// --- Rendering --------------------------------------------------------------
+// Bright stroke width; the renderer draws a wider contrasting halo underneath
+// (see themes `halo`) so the wireframes read on ANY background — including a
+// terminal full of white code — without filling/obscuring the area behind them.
+export const LINE_W = 2.4;
+
+// --- Level waves ------------------------------------------------------------
+// Classic Asteroids progression: clear every rock to advance. Each level adds
+// one more big rock and the rocks fly a little faster.
+export const BASE_ROCKS = 3;      // big rocks at level 1 (count = BASE_ROCKS + level)
+export const LEVEL_BANNER = 1.4;  // seconds the "LEVEL N" flash lingers
+
+// --- Power-ups --------------------------------------------------------------
+export const POWERUP_EVERY = 13;  // avg seconds between drifting pickups
+export const POWERUP_TTL = 14;    // seconds a pickup lingers before it fades
+export const TRIPLE_TIME = 9;     // triple-shot duration
+export const RAPID_TIME = 9;      // rapid-fire duration
+export const SHIELD_TIME = 6;     // shield (invulnerability) duration
+
+// --- Mini-boss ("hunter") that chases the ship ------------------------------
+export const BOSS_FROM_LEVEL = 3; // earliest level a hunter can appear
+export const BOSS_EVERY = 24;     // seconds between hunter spawn attempts
+export const BOSS_HP = 6;         // hits to destroy
+export const BOSS_SCORE = 400;    // points for killing one
+
 // Controls/frame fade out after this much idle time (ms).
 export const CHROME_HIDE_MS = 4000;
 

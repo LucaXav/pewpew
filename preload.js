@@ -11,6 +11,8 @@ contextBridge.exposeInMainWorld("pew", {
   // Mode / pause toggles fired by global shortcuts.
   onToggleMode: (cb) => ipcRenderer.on("toggle-mode", () => cb()),
   onTogglePause: (cb) => ipcRenderer.on("toggle-pause", () => cb()),
+  // Focus mode: pause + click-through in one keystroke (type behind the overlay).
+  onToggleFocus: (cb) => ipcRenderer.on("toggle-focus", () => cb()),
   onCycleTheme: (cb) => ipcRenderer.on("cycle-theme", () => cb()),
   // Sample the desktop behind the overlay (for the "auto" color theme).
   sampleBg: () => ipcRenderer.invoke("sample-bg"),

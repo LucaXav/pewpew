@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// CLI launcher: `pewpew` starts the overlay (detached, no console window).
-// Made available by `npm link` or `npm install -g .` (adds a `pewpew` command).
+// CLI launcher: `vibeshift` starts the overlay (detached, no console window).
+// Made available by `npm link` or `npm install -g .` (adds a `vibeshift` command).
 const { spawn } = require("child_process");
 const path = require("path");
 
@@ -10,7 +10,7 @@ let electron;
 try {
   electron = require("electron");
 } catch (e) {
-  console.error("Electron is not installed. Run `npm install` in the pewpew folder first.");
+  console.error("Electron is not installed. Run `npm install` in the vibeshift folder first.");
   process.exit(1);
 }
 
@@ -20,4 +20,4 @@ const child = spawn(electron, [appDir], {
   stdio: "ignore",
 });
 child.unref();
-console.log("PewPew launched.");
+console.log("Vibe Shift launched.");

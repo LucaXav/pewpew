@@ -1,53 +1,90 @@
-# 🚀 PewPew
+# 🛸 Vibe Shift
 
-A **transparent, click-through, always-on-top** desktop overlay that drops an
-**8-bit white Asteroids** arcade game right on top of your screen — fly a
-fighter ship, blast asteroids into smaller chunks, rack up a score… all while
-your code (or anything else) keeps running **behind** it.
+**An 8-bit Asteroids game that floats — transparent and click-through — right on
+top of your terminal, so you can blast rocks while your AI vibecodes in the
+background, then *shift* straight back to your prompt.**
 
-Flip on click-through and it becomes an ambient screensaver of drifting
-asteroids floating over your editor — graphics on top, your work fully usable
-underneath.
+You know the loop: fire off a prompt, wait for the agent to grind, fire off
+another. Vibe Shift fills the wait. It drops a see-through arcade game over your
+whole screen — your code stays fully readable underneath — and one hotkey
+freezes the game and lets your clicks fall through to the editor so you can
+retype a prompt and dive back in.
 
-![PewPew gameplay](docs/demo-play.png)
+![Vibe Shift gameplay](docs/demo-play.png)
 
 ---
 
-## ✨ Features
+## ✨ What it does
 
-- **True overlay** — frameless, transparent, always-on-top window. White
-  wireframe graphics float over your desktop; everything else is see-through.
-- **Click-through mode** — let mouse + keyboard fall through to the apps behind
-  so you can keep coding, with the game still drifting on top.
-- **Two modes**
-  - **PLAY** — steer the ship, thrust, fire, split asteroids, score, avoid
-    collisions (3 lives).
-  - **AMBIENT** — asteroids just drift across the screen, screensaver-style,
-    for when you don't want to play but want the vibe.
-- **8-bit vector look** — chunky wireframe ship & asteroids, pixel bullets,
-  particle explosions. Shoot a big rock → it breaks into smaller ones.
-- **Color themes** — cycle **White → Retro Green (CRT phosphor) → Amber → Cyan →
-  Auto**. The retro green reads great over a code editor; **Auto** samples the
-  desktop behind the transparent window and flips the graphics to a contrasting
-  color (e.g. green on a dark terminal) so they stay visible. The whole UI
-  recolors together. Click the color swatch icon or press `Ctrl/Cmd+Shift+C`.
+- **Floats over everything** — a frameless, transparent, always-on-top window.
+  Only the glowing wireframes draw; the rest is see-through, so your terminal /
+  editor is fully usable behind it.
+- **Reads on any background** — every shape is drawn with a contrasting outline
+  *and* a glow, so the graphics pop whether they're over dark panes or bright
+  white code text — without ever hiding the code.
+- **Launches fullscreen on your terminal's screen** — it opens covering the
+  display your cursor is on, snug to the work area. Double-click anywhere to
+  pop to a window; double-click again to snap back to fullscreen.
+- **Shift to focus, shift back** — one hotkey (`Ctrl+Shift+F`) **pauses the game
+  and turns on click-through** so you can type your next prompt into your editor
+  *through* the overlay. Hit it again and you're back in the game, exactly where
+  you left off. A flash at the top always reminds you of the key.
+- **Actual gameplay, not just a screensaver:**
+  - **Levels** — clear every asteroid to advance; each level adds more rocks and
+    speeds them up.
+  - **Power-ups** (drawn as real icons): 🛡 shield, three-shot **triple**,
+    ⚡ **rapid-fire**, and a ♥ **extra life**. Fly over one to grab it.
+  - **A chasing mini-boss** — a hunter that hunts you down, fires back, takes
+    several hits, and drops a power-up when you kill it.
+  - **Reverse thrust** — back up with `↓` / `S`, not just forward.
+- **Ambient mode** — flip to a calm screensaver of drifting rocks when you'd
+  rather just vibe.
+- **Color themes** — White → Retro CRT Green → Amber → Cyan → **Auto** (samples
+  the desktop behind the window and picks a contrasting color so the graphics
+  always stay visible).
 
-![PewPew retro green](docs/demo-green.png)
-- **Score / lives HUD** in the top-right, with a persistent high score and a
-  `+points` tile that pops on the right each time you bust a rock.
-- **Move & resize, visually** — a dashed outline traces the window edge with 8
-  drag grips so you can scale it precisely; **drag the top-left bar** to move it,
-  and **double-click** that bar to toggle fullscreen.
-- **Icon controls that get out of the way** — a clean white icon cluster
-  (✕ quit · click-through · play/ambient · pause) that **auto-hides after a few
-  seconds**; **jiggle the mouse in the top-left corner** to bring it back.
-- **Always a way back** — global shortcuts (with fallback combos if another app
-  owns one) plus the always-reachable on-screen controls, since a frameless
-  window has no title bar.
-
-| Menu | Ambient (drifting over code) |
+| Ambient drift over code | Retro CRT green |
 | --- | --- |
-| ![menu](docs/demo-menu.png) | ![ambient](docs/demo-ambient.png) |
+| ![ambient](docs/demo-ambient.png) | ![green](docs/demo-green.png) |
+
+---
+
+## 📦 Install & run
+
+You need [Node.js](https://nodejs.org) (v18+). Then:
+
+```bash
+git clone https://github.com/LucaXav/vibeshift.git
+cd vibeshift
+npm install      # downloads Electron + generates the app icon
+npm start        # launches the overlay, fullscreen, on top of everything
+```
+
+That's it — it opens fullscreen over whatever's on your screen. Quit any time
+with `Ctrl+Shift+Q`.
+
+### Desktop icon + global launch hotkey (Windows)
+
+```bash
+npm run install-desktop
+```
+
+Creates a **Vibeshift** icon on your Desktop and Start Menu (with the app logo)
+and binds it to **`Ctrl+Shift+F7`** — press that anywhere to launch it (or bring
+it to the front if it's already running).
+
+### A global `vibeshift` command
+
+```bash
+npm install -g .     # (or: npm link)
+vibeshift            # launch from anywhere
+```
+
+### Try it in a plain browser (no Electron)
+
+```bash
+npm run serve        # then open http://localhost:4173/
+```
 
 ---
 
@@ -56,116 +93,74 @@ underneath.
 | Action | Key |
 | --- | --- |
 | Turn left / right | `←` `→` (or `A` / `D`) |
-| Thrust | `↑` (or `W`) |
+| Forward thrust | `↑` (or `W`) |
+| **Reverse thrust** | `↓` (or `S`) |
 | Fire | `Space` |
 | Start / retry | `Space` / `Enter` |
-| Toggle **click-through** | `Ctrl/Cmd + Shift + O` |
-| Toggle **Play ↔ Ambient** | `Ctrl/Cmd + Shift + G` |
-| Pause | `Ctrl/Cmd + Shift + P` |
-| **Change color** | `Ctrl/Cmd + Shift + C` |
-| **Quit** | `Ctrl/Cmd + Shift + Q` |
+| **Focus & pause** (type behind the overlay) | `Ctrl+Shift+F` |
+| Pause | `Ctrl+Shift+P` |
+| Toggle **click-through** | `Ctrl+Shift+O` |
+| Toggle **Play ↔ Ambient** | `Ctrl+Shift+G` |
+| Change color | `Ctrl+Shift+C` |
+| Quit | `Ctrl+Shift+Q` |
 
-### Moving, resizing & the controls
+> On macOS, `Ctrl` is `Cmd` in these combos. Each shortcut tries a few fallback
+> combos if another app already owns one, and every action also has an on-screen
+> icon button (top-left), so nothing is ever truly stuck.
 
-- **Move:** just **click and drag anywhere** on the overlay — the whole surface
-  is a drag handle, so you can throw it across monitors easily.
-- **Fullscreen:** **double-click the top-left corner** (the controls area) to
-  fill the screen; double-click again to restore the previous size.
-- **Resize:** drag any of the 8 grips on the white outline that traces the
-  window edge. (Native edge-drag also works.)
-- **Show/hide controls:** the icon cluster and resize outline fade out after a
-  few idle seconds — move the mouse into the **top-left corner** to reveal them.
-- **Icons (left → right):** ✕ quit · ◐ click-through · ⇄ play/ambient · ⏸ pause
-  · ⬤ color (cycles White / Green / Amber / Cyan / Auto).
+### The vibecoding flow
 
-> When click-through is **on**, the window ignores the mouse so clicks land on
-> whatever is behind it. The icon cluster stays clickable in the top-left —
-> click the **◐ click-through** icon (or press `Ctrl/Cmd+Shift+O`) to take
-> control back. (Move/resize are disabled during click-through — exit it first.)
+1. You're playing while the agent works.
+2. Agent stops, you need to prompt again → hit **`Ctrl+Shift+F`**. The game
+   freezes and your mouse/keyboard pass straight through to your editor.
+3. Type your prompt, hit enter.
+4. Hit **`Ctrl+Shift+F`** again → back in the game, right where you left off.
 
----
+### Moving, resizing, fullscreen
 
-## 📦 Install & Run
-
-You need [Node.js](https://nodejs.org) (v18+).
-
-```bash
-git clone https://github.com/LucaXav/pewpew.git
-cd pewpew
-npm install      # downloads Electron
-npm start        # launches the overlay
-```
-
-That's it. The overlay opens on top of everything. Press `Ctrl/Cmd+Shift+Q` to
-quit.
-
-### Put it on your Desktop + a global hotkey
-
-To get a **PewPew icon on your Desktop and Start Menu** (with the app logo) and a
-**global launch hotkey**:
-
-```bash
-npm run install-desktop
-```
-
-This creates `PewPew` shortcuts that launch the overlay with no console window,
-and binds them to **`Ctrl + Shift + F7`** — press it anywhere to open PewPew (if
-it's already running, the hotkey just brings it to the front). Windows only.
-
-### Launch from the command line
-
-```bash
-npm start            # from the project folder
-
-# or install a global `pewpew` command:
-npm install -g .     # (or: npm link)
-pewpew               # launches the overlay from anywhere
-```
-
-### Try the game in a plain browser (no Electron)
-
-The renderer runs in any browser too — handy for tweaking the game:
-
-```bash
-npm run serve    # serves a test page with a fake "code" background
-# open http://localhost:4173/
-```
+- **Fullscreen:** **double-click anywhere** to toggle. It already launches
+  fullscreen on the screen your cursor is on.
+- **Move:** click-drag anywhere on the surface (it's all a drag handle).
+- **Resize:** drag any of the 8 grips on the dashed outline that traces the
+  window edge.
+- **Controls** (top-left icons: ✕ quit · ◐ click-through · ⇄ play/ambient ·
+  ⏸ pause · ⬤ color) auto-hide when idle — nudge the mouse into the top-left
+  corner to bring them back.
 
 ---
 
 ## 🧠 How it works
 
-PewPew is a faithful implementation of the click-through transparent overlay
-technique:
+A transparent, click-through, always-on-top overlay done the standard way:
 
 - **`main.js`** — creates a `BrowserWindow` with `transparent: true`,
-  `frame: false`, `alwaysOnTop: true`, sized to the display's work area. It
-  owns click-through via `win.setIgnoreMouseEvents(on, { forward: true })`
-  (`forward: true` keeps mouse-move flowing to the page for hover hit-testing
-  while clicks pass through), and registers the global shortcuts.
+  `frame: false`, `alwaysOnTop: true`, sized to the work area of the display the
+  cursor is on. Owns click-through via
+  `win.setIgnoreMouseEvents(on, { forward: true })` (forwarding keeps mouse-move
+  flowing for hover hit-testing while clicks pass through), fullscreen toggling,
+  and the global shortcuts.
 - **`preload.js`** — a tiny `contextBridge` API (`window.pew`) so the renderer
-  can request click-through, get notified of changes, and quit — without
-  exposing Node to the page.
-- **`renderer/`** — the game, split into small ES modules under `src/`. They
-  draw white wireframes on a transparent `<canvas>` (cleared to alpha 0 every
-  frame), run the physics/collision loop, and handle the score HUD, modes,
-  themes, and the come-back chrome. `src/main.js` is the entry point that wires
-  them together.
+  can request click-through / focus / fullscreen and get notified of changes,
+  without exposing Node to the page.
+- **`renderer/`** — the game, as focused ES modules under `src/`. They draw
+  glowing wireframes on a transparent `<canvas>` (cleared to alpha 0 every
+  frame), run the physics/collision loop, and own the HUD, modes, themes, and
+  the auto-hiding chrome.
 
-The transparency only works because **every layer is transparent**: the page
-background, the body, and the canvas are all alpha 0, so only the white shapes
-are drawn and the desktop shows through everywhere else.
+Transparency only works because **every layer is transparent** — the page, the
+body, and the canvas are all alpha 0, so only the wireframes draw and your work
+shows through everywhere else.
 
 ### Project layout
 
 ```
-pewpew/
-├── main.js                  # Electron main (window, click-through, move/resize, shortcuts)
+vibeshift/
+├── main.js                  # Electron main (window, click-through, fullscreen, shortcuts)
 ├── preload.js               # contextBridge API (window.pew)
-├── bin/pewpew.js            # `pewpew` CLI launcher
+├── bin/vibeshift.js         # `vibeshift` CLI launcher
 ├── renderer/
 │   ├── index.html           # overlay markup (canvas + drag surface + HUD + controls)
-│   ├── style.css            # transparent, white, pixel-ish styling
+│   ├── style.css            # transparent, glowing, pixel-ish styling
 │   └── src/                 # the game, as focused ES modules
 │       ├── main.js          # entry: boots modules, runs the loop, wires IPC
 │       ├── config.js        # tunable constants + lookup tables
@@ -173,29 +168,26 @@ pewpew/
 │       ├── view.js          # transparent canvas + DPR-aware sizing
 │       ├── utils.js         # rand/randi + toroidal screen wrap
 │       ├── state.js         # the shared mutable game state
-│       ├── entities.js      # ship / asteroid / particle factories
-│       ├── hud.js           # score-lives DOM overlay, banner, +N pops
+│       ├── entities.js      # ship / asteroid / power-up / boss / particle factories
+│       ├── hud.js           # score-lives DOM overlay, banner, command flash, +N pops
 │       ├── engine.js        # lifecycle, input, physics + collision update
-│       ├── render.js        # draws the scene each frame
+│       ├── render.js        # draws the scene each frame (with contrast outlines)
 │       ├── themes.js        # color themes + auto background sampling
-│       └── chrome.js        # auto-hide controls, move/resize, fullscreen
-├── assets/                  # generated app icon (pewpew.png / pewpew.ico)
-├── tools/
-│   ├── serve.js             # zero-dep static server for browser testing
-│   ├── make-icon.js         # procedural icon generator (PNG + ICO)
-│   └── install-shortcut.ps1 # creates the Desktop/Start-Menu shortcut + hotkey
+│       └── chrome.js        # auto-hide controls, move/resize, fullscreen, focus mode
+├── assets/                  # generated app icon (vibeshift.png / vibeshift.ico)
+├── tools/                   # static server, icon generator, desktop-shortcut installer
 ├── test/index.html          # browser test harness (fake code background)
 └── docs/                    # screenshots
 ```
 
 ---
 
-## ⚠️ Notes & gotchas
+## ⚠️ Notes
 
-- **Frameless window has no ✕** — quit with `Ctrl/Cmd+Shift+Q`.
-- **Global shortcut taken?** If a shortcut doesn't register, another app owns
-  that combo; close it or change the accelerator in `main.js`.
-- **Transparency on Linux** depends on a running compositor.
+- **Frameless window has no ✕** — quit with `Ctrl+Shift+Q` (or the top-left ✕).
+- **A shortcut didn't bind?** Another app owns that combo — use the on-screen
+  icons, or change the accelerator in `main.js`.
+- **Transparency on Linux** needs a running compositor.
 - Built and verified on Windows 11 with Electron 33.
 
 ---

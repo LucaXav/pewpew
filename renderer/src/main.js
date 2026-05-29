@@ -7,7 +7,7 @@ import "./view.js"; // sets up the canvas + resize listener on import
 import { state } from "./state.js";
 import { update, keys, startGame, setMode, fire, toggleMode, togglePause } from "./engine.js";
 import { render } from "./render.js";
-import { updateHUD, updatePauseIcon, popScore } from "./hud.js";
+import { updateHUD, updatePauseIcon, popScore, flashToast, kbd, hotkeys } from "./hud.js";
 import { applyTheme, cycleTheme, currentTheme } from "./themes.js";
 import {
   setupControls,
@@ -17,6 +17,9 @@ import {
   handleThrough,
   hideChromeNow,
   isChromeHidden,
+  toggleFocus,
+  isFocusMode,
+  pauseToggle,
 } from "./chrome.js";
 import { bridge } from "./bridge.js";
 
@@ -43,10 +46,19 @@ refreshBounds();
 if (bridge) {
   bridge.onThrough(handleThrough);
   bridge.onToggleMode(toggleMode);
-  bridge.onTogglePause(togglePause);
+  bridge.onTogglePause(pauseToggle);
+  bridge.onToggleFocus(toggleFocus);
   bridge.onCycleTheme(cycleTheme);
   bridge.onFull(() => refreshBounds());
   bridge.onShortcuts((map) => {
+    // Readable form (e.g. "Ctrl+Shift+F") for the toast key chips...
+    const readable = (a) => (a ? a.replace("CommandOrControl", "Ctrl") : "");
+    if (readable(map.focus)) hotkeys.focus = readable(map.focus);
+    if (readable(map.pause)) hotkeys.pause = readable(map.pause);
+    if (readable(map.through)) hotkeys.through = readable(map.through);
+    if (readable(map.quit)) hotkeys.quit = readable(map.quit);
+
+    // ...and a compact symbol form for the bottom hint bar.
     const pretty = (a) =>
       a
         ? a
@@ -59,19 +71,26 @@ if (bridge) {
     if (hints) {
       hints.innerHTML =
         "<span><b>&larr; &rarr;</b> turn</span>" +
-        "<span><b>&uarr;</b> thrust</span>" +
+        "<span><b>&uarr; / &darr;</b> thrust</span>" +
         "<span><b>SPACE</b> fire</span>" +
-        "<span><b>drag</b> move</span>" +
         "<span><b>dbl-click</b> fullscreen</span>" +
+        `<span><b>${pretty(map.focus)}</b> focus/pause</span>` +
         `<span><b>${pretty(map.through)}</b> through</span>` +
         `<span><b>${pretty(map.quit)}</b> quit</span>`;
     }
+    // Now that we know the real key, flash the pause/focus hint.
+    flashToast(`${kbd(hotkeys.focus)} pause &amp; type behind &middot; ${kbd(hotkeys.quit)} quit`, 7000);
   });
 }
 
 setMode("play");
 updateHUD();
 requestAnimationFrame(loop);
+
+// Flash the pause/focus hint on launch. In Electron this is refreshed with the
+// real bound key once `onShortcuts` arrives; in a plain browser it's the only
+// flash, using the default labels.
+if (!bridge) flashToast(`${kbd(hotkeys.focus)} pause &amp; type behind`, 6000);
 
 // Expose a tiny hook for automated testing / debugging.
 window.__pew = {
@@ -85,6 +104,11 @@ window.__pew = {
     asteroids: state.asteroids.length,
     bullets: state.bullets.length,
     particles: state.particles.length,
+    powerups: state.powerups.length,
+    enemyBullets: state.enemyBullets.length,
+    boss: state.boss ? state.boss.hp : 0,
+    triple: state.triple > 0,
+    rapid: state.rapid > 0,
   }),
   startGame,
   setMode,
@@ -97,6 +121,8 @@ window.__pew = {
   revealChrome,
   hideChromeNow,
   togglePause,
+  toggleFocus,
+  focusMode: isFocusMode,
   toggleMode,
   popScore,
   cycleTheme,

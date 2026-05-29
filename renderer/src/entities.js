@@ -2,7 +2,7 @@
  * particles. They only build/append objects — movement and collisions live in
  * the engine. */
 import { view } from "./view.js";
-import { TAU, SIZES } from "./config.js";
+import { TAU, SIZES, POWERUP_TTL, BOSS_HP } from "./config.js";
 import { rand, randi } from "./utils.js";
 import { state } from "./state.js";
 
@@ -41,6 +41,33 @@ export function makeAsteroid(tier, x, y, gentle) {
     spin: rand(-1.2, 1.2),
     shape,
   };
+}
+
+export const POWERUP_KINDS = ["shield", "triple", "rapid", "life"];
+
+// A slowly drifting pickup. Fly the ship over it to collect; it fades after TTL.
+export function makePowerup(x, y, kind) {
+  return {
+    kind: kind ?? POWERUP_KINDS[randi(0, POWERUP_KINDS.length - 1)],
+    x: x ?? rand(view.W * 0.15, view.W * 0.85),
+    y: y ?? rand(view.H * 0.15, view.H * 0.85),
+    r: 13,
+    a: 0,
+    vx: rand(-14, 14),
+    vy: rand(-14, 14),
+    ttl: POWERUP_TTL,
+  };
+}
+
+// The hunter mini-boss: enters from an edge, then chases (see engine.updateBoss).
+export function makeBoss() {
+  const edge = randi(0, 3);
+  let x, y;
+  if (edge === 0) { x = -40; y = rand(0, view.H); }
+  else if (edge === 1) { x = view.W + 40; y = rand(0, view.H); }
+  else if (edge === 2) { x = rand(0, view.W); y = -40; }
+  else { x = rand(0, view.W); y = view.H + 40; }
+  return { x, y, r: 26, a: 0, vx: 0, vy: 0, hp: BOSS_HP, maxHp: BOSS_HP, fire: 1.6, flash: 0 };
 }
 
 export function spawnParticles(x, y, n, spread, life) {

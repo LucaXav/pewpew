@@ -1,4 +1,4 @@
-// Generates assets/pewpew.png (256x256) and assets/pewpew.ico procedurally —
+// Generates assets/vibeshift.png (256x256) and assets/vibeshift.ico procedurally —
 // a dark rounded tile with a white 8-bit ship + a couple of asteroid rings,
 // matching the in-game look. Zero dependencies (uses Node's zlib).
 const fs = require("fs");
@@ -139,7 +139,7 @@ function encodePNG(width, height, pixels) {
 }
 
 const png = encodePNG(N, N, rgba);
-fs.writeFileSync(path.join(assets, "pewpew.png"), png);
+fs.writeFileSync(path.join(assets, "vibeshift.png"), png);
 
 // ---- ICO wrapper (single PNG-compressed entry, Vista+) --------------------
 const dir = Buffer.alloc(6);
@@ -155,8 +155,8 @@ entry.writeUInt16LE(1, 4); // planes
 entry.writeUInt16LE(32, 6); // bpp
 entry.writeUInt32LE(png.length, 8); // size
 entry.writeUInt32LE(6 + 16, 12); // offset
-fs.writeFileSync(path.join(assets, "pewpew.ico"), Buffer.concat([dir, entry, png]));
+fs.writeFileSync(path.join(assets, "vibeshift.ico"), Buffer.concat([dir, entry, png]));
 
 console.log(
-  "wrote assets/pewpew.png (" + png.length + " bytes) and assets/pewpew.ico"
+  "wrote assets/vibeshift.png (" + png.length + " bytes) and assets/vibeshift.ico"
 );

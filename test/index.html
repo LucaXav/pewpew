@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PewPew — overlay test harness</title>
+    <title>Vibe Shift — overlay test harness</title>
     <link rel="stylesheet" href="../renderer/style.css" />
     <style>
       /* Fake "code behind the overlay" so the transparent game can be seen
@@ -44,6 +44,8 @@
       <i class="grip" data-edge="w"></i>
     </div>
 
+    <div id="toast" class="chrome"></div>
+
     <div id="hud" class="chrome">
       <div id="score">SCORE 0</div>
       <div id="hiscore">HI 0</div>
@@ -54,14 +56,19 @@
 
     <div id="hints" class="chrome">
       <span><b>&larr; &rarr;</b> turn</span>
-      <span><b>&uarr;</b> thrust</span>
+      <span><b>&uarr; / &darr;</b> thrust</span>
       <span><b>SPACE</b> fire</span>
-      <span><b>drag</b> move</span>
       <span><b>dbl-click</b> fullscreen</span>
+      <span><b>^&#8679;F</b> focus/pause</span>
+    </div>
+
+    <div id="focusbanner" class="chrome">
+      <div class="fb-title">FOCUS &middot; PAUSED</div>
+      <div class="fb-sub">TYPE BEHIND THE OVERLAY &mdash; HOTKEY TO RESUME</div>
     </div>
 
     <div id="controls">
-      <button id="btn-quit" class="ic" title="Quit PewPew">
+      <button id="btn-quit" class="ic" title="Quit Vibe Shift">
         <svg viewBox="0 0 24 24"><path d="M5 5 L19 19 M19 5 L5 19" /></svg>
       </button>
       <button id="btn-through" class="ic" title="Toggle click-through">
@@ -88,7 +95,7 @@
     </div>
 
     <div id="banner" class="chrome hidden">
-      <div id="banner-title">PEWPEW</div>
+      <div id="banner-title">VIBE SHIFT</div>
       <div id="banner-sub">PRESS SPACE / FIRE TO START</div>
     </div>
 

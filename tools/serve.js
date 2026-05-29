@@ -39,5 +39,5 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(port, () => {
-  console.log(`pewpew test server: http://localhost:${port}/`);
+  console.log(`vibeshift test server: http://localhost:${port}/`);
 });

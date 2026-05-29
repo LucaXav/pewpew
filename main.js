@@ -1,4 +1,5 @@
-// PewPew — transparent, click-through, always-on-top Asteroids overlay.
+// Vibe Shift — transparent, click-through, always-on-top Asteroids overlay you
+// play over your terminal while you vibecode.
 // Main process: window creation, click-through wiring, global shortcuts, IPC.
 const { app, BrowserWindow, ipcMain, globalShortcut, screen, desktopCapturer } = require("electron");
 const path = require("path");
@@ -18,7 +19,7 @@ let through = false; // click-through state (input falls through to apps behind)
 
 // Window/taskbar icon if it has been generated (npm run make-icon).
 const ICON = (() => {
-  for (const f of ["pewpew.ico", "pewpew.png"]) {
+  for (const f of ["vibeshift.ico", "vibeshift.png"]) {
     const p = path.join(__dirname, "assets", f);
     if (fs.existsSync(p)) return p;
   }
@@ -60,9 +61,22 @@ function createWindow() {
   win.setAlwaysOnTop(true, "screen-saver");
   win.setVisibleOnAllWorkspaces(true, { visibleOnAllWorkspaces: true });
 
-  // Cover the working area of the display the window opens on.
-  const d = screen.getDisplayMatching(win.getBounds());
-  win.setBounds(d.workArea); // workArea excludes the taskbar
+  // Launch FULLSCREEN over whatever display your terminal/cursor is on, so it
+  // drops straight onto the codebase you're vibecoding. workArea excludes the
+  // taskbar so it stays reachable. We mark this as the fullscreen state and
+  // pre-compute a centered window, so a double-click pops to a window and the
+  // next double-click snaps back to fullscreen.
+  const d = screen.getDisplayNearestPoint(screen.getCursorScreenPoint());
+  win.setBounds(d.workArea);
+  isFull = true;
+  const ww = Math.min(1040, d.workArea.width - 80);
+  const wh = Math.min(660, d.workArea.height - 80);
+  savedBounds = {
+    x: d.workArea.x + Math.round((d.workArea.width - ww) / 2),
+    y: d.workArea.y + Math.round((d.workArea.height - wh) / 2),
+    width: ww,
+    height: wh,
+  };
 
   win.loadFile(path.join(__dirname, "renderer", "index.html"));
 
@@ -100,7 +114,7 @@ function registerFirst(candidates, fn) {
       /* invalid accel string — try next */
     }
   }
-  console.warn(`[pewpew] no shortcut available from: ${candidates.join(", ")}`);
+  console.warn(`[vibeshift] no shortcut available from: ${candidates.join(", ")}`);
   return null;
 }
 
@@ -122,6 +136,10 @@ app.whenReady().then(() => {
     pause: registerFirst(
       ["CommandOrControl+Shift+P", "CommandOrControl+Alt+P", "Alt+Shift+P"],
       () => win && win.webContents.send("toggle-pause")
+    ),
+    focus: registerFirst(
+      ["CommandOrControl+Shift+F", "CommandOrControl+Alt+F", "Alt+Shift+F"],
+      () => win && win.webContents.send("toggle-focus")
     ),
     color: registerFirst(
       ["CommandOrControl+Shift+C", "CommandOrControl+Alt+C", "Alt+Shift+C"],

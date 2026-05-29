@@ -4,8 +4,9 @@
  * only resizing and the interactive bits need JS here. */
 import { CHROME_HIDE_MS, MIN_W, MIN_H, REVEAL_W, REVEAL_H } from "./config.js";
 import { bridge } from "./bridge.js";
-import { el } from "./hud.js";
+import { el, flashToast, kbd, hotkeys } from "./hud.js";
 import { setMode, toggleMode, togglePause } from "./engine.js";
+import { state } from "./state.js";
 import { cycleTheme } from "./themes.js";
 
 let throughOn = false;
@@ -13,6 +14,8 @@ let chromeHidden = false;
 let hideAt = performance.now() + CHROME_HIDE_MS;
 let cachedBounds = null; // last known window bounds (for move/resize math)
 let drag = null; // active resize gesture
+let focusMode = false; // "focus": paused + click-through so you can type behind it
+let focusThrough = 0; // # of upcoming through events that focus drove (skip mode switch)
 
 // Show the chrome and (re)arm the idle hide timer.
 export function revealChrome() {
@@ -45,11 +48,49 @@ export async function refreshBounds() {
 }
 
 // Click-through implies you're working behind the overlay -> switch to ambient.
+// Exception: when focus mode drove the toggle we leave the game exactly as it
+// was (paused) so it resumes intact on the way out.
 export function handleThrough(on) {
   throughOn = on;
   document.body.classList.toggle("through", on);
   revealChrome();
+  if (focusThrough > 0) {
+    focusThrough--;
+    return;
+  }
   setMode(on ? "ambient" : "play");
+}
+
+// Focus mode: one hotkey to freeze the game AND let clicks fall through to the
+// app behind the overlay, so you can dart back to your editor, retype a prompt,
+// and hit the hotkey again to resume right where you left off.
+export function toggleFocus() {
+  focusMode = !focusMode;
+  document.body.classList.toggle("focus", focusMode);
+  focusThrough++; // the through toggle below is focus-driven, not a mode switch
+  if (focusMode) {
+    if (!state.paused) togglePause(); // freeze
+    if (bridge) bridge.setThrough(true);
+    else handleThrough(true); // browser fallback (no OS click-through)
+    flashToast(`PAUSED &middot; type behind — ${kbd(hotkeys.focus)} to resume`, 6000);
+  } else {
+    if (bridge) bridge.setThrough(false);
+    else handleThrough(false);
+    if (state.paused) togglePause(); // resume the same game
+    flashToast("RESUMED", 1400);
+  }
+}
+
+export function isFocusMode() {
+  return focusMode;
+}
+
+// Plain pause (button / Ctrl+Shift+P) with a top flash so the resume key is
+// obvious. Focus mode pauses separately and shows its own toast.
+export function pauseToggle() {
+  togglePause();
+  if (state.paused) flashToast(`PAUSED &middot; ${kbd(hotkeys.pause)} to resume`, 6000);
+  else flashToast("RESUMED", 1400);
 }
 
 // --- resize (drag a grip) ---------------------------------------------------
@@ -127,7 +168,7 @@ function onHover(e) {
 export function setupControls() {
   el.btnThrough.addEventListener("click", () => bridge && bridge.setThrough(!throughOn));
   el.btnMode.addEventListener("click", toggleMode);
-  el.btnPause.addEventListener("click", togglePause);
+  el.btnPause.addEventListener("click", pauseToggle);
   el.btnQuit.addEventListener("click", () => bridge && bridge.quit());
   if (el.btnColor) el.btnColor.addEventListener("click", cycleTheme);
 
@@ -136,16 +177,33 @@ export function setupControls() {
     g.addEventListener("pointerdown", (e) => beginResize(e, g.dataset.edge));
   });
 
-  // Double-click the top-left (controls bar / reveal zone) to toggle fullscreen.
-  // The drag surface itself is a native drag region, which swallows dblclick, so
-  // we listen on these no-drag spots instead.
-  const dblFull = (e) => {
-    if (e.target.closest && e.target.closest("button")) return;
+  // Double-click ANYWHERE to toggle fullscreen. The drag surface is a native
+  // drag region that swallows the `dblclick` event, so we detect a double-click
+  // ourselves from two quick mousedowns at (nearly) the same spot. We also keep
+  // the real dblclick on the no-drag spots as a belt-and-braces fallback.
+  const goFull = (e) => {
+    if (e && e.target && e.target.closest && e.target.closest("#controls, #frame, button")) return;
     if (!throughOn && bridge) bridge.toggleFull();
   };
-  el.controls.addEventListener("dblclick", dblFull);
+  let lastDown = 0;
+  let lastX = 0;
+  let lastY = 0;
+  window.addEventListener("mousedown", (e) => {
+    if (throughOn) return;
+    if (e.target && e.target.closest && e.target.closest("#controls, #frame, button")) return;
+    const now = performance.now();
+    if (now - lastDown < 350 && Math.abs(e.screenX - lastX) < 6 && Math.abs(e.screenY - lastY) < 6) {
+      goFull(e);
+      lastDown = 0;
+    } else {
+      lastDown = now;
+      lastX = e.screenX;
+      lastY = e.screenY;
+    }
+  });
+  el.controls.addEventListener("dblclick", goFull);
   if (el.revealzone) {
-    el.revealzone.addEventListener("dblclick", dblFull);
+    el.revealzone.addEventListener("dblclick", goFull);
     el.revealzone.addEventListener("mousemove", revealChrome);
   }
   window.addEventListener("mousemove", onHover);
