@@ -60,8 +60,10 @@ npm install      # downloads Electron + generates the app icon
 npm start        # launches the overlay, fullscreen, on top of everything
 ```
 
-That's it — it opens fullscreen over whatever's on your screen. Quit any time
-with `Ctrl+Shift+Q`.
+That's it — it opens fullscreen over whatever's on your screen. The window is
+transparent, so you'll see glowing wireframes floating over your desktop with
+the control icons (and a key hint) in the **top-left corner**. Quit any time
+with **`Ctrl+Shift+Q`**.
 
 ### Desktop icon + global launch hotkey (Windows)
 
