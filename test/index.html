@@ -24,47 +24,70 @@
         overflow: hidden;
         pointer-events: none;
       }
-      .k {
-        color: #5b7aa8;
-      }
-      .s {
-        color: #4a6b52;
-      }
     </style>
   </head>
   <body>
     <pre id="codebg"></pre>
 
     <canvas id="game"></canvas>
+
+    <div id="frame" aria-hidden="true">
+      <i class="grip" data-edge="nw"></i>
+      <i class="grip" data-edge="n"></i>
+      <i class="grip" data-edge="ne"></i>
+      <i class="grip" data-edge="e"></i>
+      <i class="grip" data-edge="se"></i>
+      <i class="grip" data-edge="s"></i>
+      <i class="grip" data-edge="sw"></i>
+      <i class="grip" data-edge="w"></i>
+    </div>
+
     <div id="hud" class="chrome">
-      <div id="grip" title="Drag to move the overlay">⠿ PEWPEW</div>
       <div id="score">SCORE 0</div>
       <div id="hiscore">HI 0</div>
-      <div id="lives">♦ ♦ ♦</div>
-      <div id="mode">MODE: PLAY</div>
+      <div id="lives"></div>
+      <div id="mode">PLAY</div>
+      <div id="scorepop"></div>
     </div>
+
     <div id="hints" class="chrome">
-      <span><b>← →</b> turn</span>
-      <span><b>↑</b> thrust</span>
+      <span><b>&larr; &rarr;</b> turn</span>
+      <span><b>&uarr;</b> thrust</span>
       <span><b>SPACE</b> fire</span>
-      <span><b>^⇧O</b> click-through</span>
-      <span><b>^⇧G</b> play/ambient</span>
-      <span><b>^⇧P</b> pause</span>
-      <span><b>^⇧Q</b> quit</span>
+      <span><b>drag top-left</b> move</span>
+      <span><b>dbl-click</b> fullscreen</span>
     </div>
-    <div id="controls">
-      <button id="btn-through">◐ THROUGH</button>
-      <button id="btn-mode">⇄ MODE</button>
-      <button id="btn-pause">⏸ PAUSE</button>
-      <button id="btn-quit">✕ QUIT</button>
+
+    <div id="controls" title="Drag to move · double-click for fullscreen">
+      <button id="btn-quit" class="ic" title="Quit PewPew">
+        <svg viewBox="0 0 24 24"><path d="M5 5 L19 19 M19 5 L5 19" /></svg>
+      </button>
+      <button id="btn-through" class="ic" title="Toggle click-through">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="9" fill="none" />
+          <path d="M12 3 A9 9 0 0 0 12 21 Z" class="fill" />
+        </svg>
+      </button>
+      <button id="btn-mode" class="ic" title="Toggle Play / Ambient">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 9 H18 M14 5 L18 9 L14 13" />
+          <path d="M20 15 H6 M10 11 L6 15 L10 19" />
+        </svg>
+      </button>
+      <button id="btn-pause" class="ic" title="Pause / resume">
+        <svg viewBox="0 0 24 24">
+          <rect x="6" y="5" width="4" height="14" rx="1" class="fill" />
+          <rect x="14" y="5" width="4" height="14" rx="1" class="fill" />
+        </svg>
+      </button>
     </div>
+
     <div id="banner" class="chrome hidden">
       <div id="banner-title">PEWPEW</div>
       <div id="banner-sub">PRESS SPACE / FIRE TO START</div>
     </div>
 
     <script>
-      // Fill the background with believable source code lines.
       const lines = [
         'const overlay = new BrowserWindow({ transparent: true, frame: false });',
         'overlay.setIgnoreMouseEvents(true, { forward: true });',

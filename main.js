@@ -127,6 +127,41 @@ ipcMain.on("set-interactive", (_e, interactive) => {
 
 ipcMain.on("quit", () => app.quit());
 
+// --- Move / resize / fullscreen (driven by the renderer chrome) -------------
+const MIN_W = 320;
+const MIN_H = 240;
+let savedBounds = null; // bounds to restore from fullscreen
+let isFull = false;
+
+ipcMain.handle("win-get-bounds", () => (win ? win.getBounds() : null));
+
+ipcMain.on("win-set-bounds", (_e, b) => {
+  if (!win || !b) return;
+  win.setBounds({
+    x: Math.round(b.x),
+    y: Math.round(b.y),
+    width: Math.max(MIN_W, Math.round(b.width)),
+    height: Math.max(MIN_H, Math.round(b.height)),
+  });
+  isFull = false; // a manual move/resize leaves fullscreen
+  win.webContents.send("full-state", false);
+});
+
+// Double-click toggles full work-area <-> the previous size.
+ipcMain.on("win-toggle-full", () => {
+  if (!win) return;
+  const d = screen.getDisplayMatching(win.getBounds());
+  if (!isFull) {
+    savedBounds = win.getBounds();
+    win.setBounds(d.workArea);
+    isFull = true;
+  } else {
+    if (savedBounds) win.setBounds(savedBounds);
+    isFull = false;
+  }
+  win.webContents.send("full-state", isFull);
+});
+
 ipcMain.handle("get-state", () => ({ through }));
 
 app.on("will-quit", () => globalShortcut.unregisterAll());

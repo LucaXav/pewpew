@@ -13,6 +13,11 @@ contextBridge.exposeInMainWorld("pew", {
   onTogglePause: (cb) => ipcRenderer.on("toggle-pause", () => cb()),
   // Which global shortcuts actually bound (so the HUD shows correct hints).
   onShortcuts: (cb) => ipcRenderer.on("shortcuts", (_e, map) => cb(map)),
+  // Window move / resize / fullscreen.
+  getBounds: () => ipcRenderer.invoke("win-get-bounds"),
+  setBounds: (b) => ipcRenderer.send("win-set-bounds", b),
+  toggleFull: () => ipcRenderer.send("win-toggle-full"),
+  onFull: (cb) => ipcRenderer.on("full-state", (_e, v) => cb(v)),
   quit: () => ipcRenderer.send("quit"),
   getState: () => ipcRenderer.invoke("get-state"),
 });

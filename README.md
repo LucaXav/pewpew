@@ -26,12 +26,17 @@ underneath.
     for when you don't want to play but want the vibe.
 - **8-bit white vector look** — chunky white wireframe ship & asteroids, pixel
   bullets, particle explosions. Shoot a big rock → it breaks into smaller ones.
-- **Score / lives HUD** in the top-right, with a persistent high score.
-- **Resizable** — drag the window edges to make the play area bigger or smaller;
-  drag the `⠿ PEWPEW` grip to reposition.
-- **Always a way back** — global shortcuts (work even while unfocused) plus an
-  on-screen **CONTROL** handle to exit click-through, since a frameless window
-  has no title bar.
+- **Score / lives HUD** in the top-right, with a persistent high score and a
+  `+points` tile that pops on the right each time you bust a rock.
+- **Move & resize, visually** — a dashed outline traces the window edge with 8
+  drag grips so you can scale it precisely; **drag the top-left bar** to move it,
+  and **double-click** that bar to toggle fullscreen.
+- **Icon controls that get out of the way** — a clean white icon cluster
+  (✕ quit · click-through · play/ambient · pause) that **auto-hides after a few
+  seconds**; **jiggle the mouse in the top-left corner** to bring it back.
+- **Always a way back** — global shortcuts (with fallback combos if another app
+  owns one) plus the always-reachable on-screen controls, since a frameless
+  window has no title bar.
 
 | Menu | Ambient (drifting over code) |
 | --- | --- |
@@ -52,9 +57,20 @@ underneath.
 | Pause | `Ctrl/Cmd + Shift + P` |
 | **Quit** | `Ctrl/Cmd + Shift + Q` |
 
+### Moving, resizing & the controls
+
+- **Move:** drag the top-left control bar (the gaps between the icons).
+- **Fullscreen:** double-click that bar (double-click again to restore).
+- **Resize:** drag any of the 8 grips on the white outline that traces the
+  window edge. (Native edge-drag also works.)
+- **Show/hide controls:** the icon cluster and resize outline fade out after a
+  few idle seconds — move the mouse into the **top-left corner** to reveal them.
+- **Icons (left → right):** ✕ quit · ◐ click-through · ⇄ play/ambient · ⏸ pause.
+
 > When click-through is **on**, the window ignores the mouse so clicks land on
-> whatever is behind it. A small **◉ CONTROL** button stays clickable in the
-> top-left — click it (or press `Ctrl/Cmd+Shift+O`) to take control back.
+> whatever is behind it. The icon cluster stays clickable in the top-left —
+> click the **◐ click-through** icon (or press `Ctrl/Cmd+Shift+O`) to take
+> control back. (Move/resize are disabled during click-through — exit it first.)
 
 ---
 

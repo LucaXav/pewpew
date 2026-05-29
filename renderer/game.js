@@ -47,6 +47,7 @@
   // --- Game state ------------------------------------------------------------
   const SIZES = { 3: 56, 2: 32, 1: 16 }; // tier -> base radius
   const SCORES = { 3: 20, 2: 50, 1: 100 };
+  const CHROME_HIDE_MS = 4000; // controls/frame fade out after this idle time
 
   let displayMode = "play"; // 'play' | 'ambient'
   let playState = "ready"; // 'ready' | 'running' | 'over'
@@ -78,17 +79,39 @@
     bannerTitle: document.getElementById("banner-title"),
     bannerSub: document.getElementById("banner-sub"),
     controls: document.getElementById("controls"),
+    frame: document.getElementById("frame"),
+    scorepop: document.getElementById("scorepop"),
     btnThrough: document.getElementById("btn-through"),
     btnMode: document.getElementById("btn-mode"),
     btnPause: document.getElementById("btn-pause"),
     btnQuit: document.getElementById("btn-quit"),
   };
 
+  // Swap the pause button between |‍| (pause) and ▶ (play) to mirror state.
+  const PAUSE_SVG =
+    '<rect x="6" y="5" width="4" height="14" rx="1" class="fill" />' +
+    '<rect x="14" y="5" width="4" height="14" rx="1" class="fill" />';
+  const PLAY_SVG = '<path d="M7 5 L19 12 L7 19 Z" class="fill" />';
+  function updatePauseIcon() {
+    const svg = el.btnPause.querySelector("svg");
+    if (svg) svg.innerHTML = paused ? PLAY_SVG : PAUSE_SVG;
+  }
+
+  // Pop a "+N" tile near the score when a rock is destroyed (right-hand side).
+  function popScore(n) {
+    if (!el.scorepop) return;
+    const tile = document.createElement("div");
+    tile.className = "pop";
+    tile.textContent = "+" + n;
+    el.scorepop.appendChild(tile);
+    setTimeout(() => tile.remove(), 760);
+  }
+
   function updateHUD() {
     el.score.textContent = "SCORE " + score;
     el.hiscore.textContent = "HI " + Math.max(hiscore, score);
-    el.lives.textContent = lives > 0 ? "♦ ".repeat(lives).trim() : "—";
-    el.mode.textContent = "MODE: " + displayMode.toUpperCase();
+    el.lives.textContent = lives > 0 ? "▲ ".repeat(lives).trim() : "—";
+    el.mode.textContent = displayMode.toUpperCase();
   }
 
   function showBanner(title, sub) {
@@ -229,6 +252,7 @@
     const a = asteroids[idx];
     score += SCORES[a.tier];
     updateHUD();
+    if (displayMode === "play") popScore(SCORES[a.tier]);
     spawnParticles(a.x, a.y, 14 + a.tier * 6, 120 + a.tier * 30, 0.7);
     asteroids.splice(idx, 1);
     if (a.tier > 1) {
@@ -473,59 +497,184 @@
       update(dt);
       render();
     }
+    tickChrome(now); // fade the controls/frame out when idle
     requestAnimationFrame(loop);
   }
 
-  // --- Controls + click-through (Electron) ----------------------------------
-  // The control cluster works in both states. When click-through is on the
-  // whole window ignores the mouse, but we still receive forwarded mousemove
-  // events: we hit-test the cluster and make just that region interactive so
-  // its buttons stay clickable — you never lose control of the overlay.
+  // --- Chrome: auto-hide, reveal-on-jiggle, move, resize, fullscreen --------
   let throughOn = false;
+  let chromeHidden = false;
+  let hideAt = performance.now() + CHROME_HIDE_MS;
+  let cachedBounds = null; // last known window bounds (for move/resize math)
+  let drag = null; // active move/resize gesture
+  const REVEAL_W = 320; // top-left "jiggle here" reveal zone
+  const REVEAL_H = 130;
+
   function toggleMode() {
     setMode(displayMode === "play" ? "ambient" : "play");
   }
-  function setupControls() {
-    el.btnThrough.addEventListener("click", () => {
-      if (bridge) bridge.setThrough(!throughOn);
-    });
-    el.btnMode.addEventListener("click", toggleMode);
-    el.btnPause.addEventListener("click", () => {
-      paused = !paused;
-    });
-    el.btnQuit.addEventListener("click", () => {
-      if (bridge) bridge.quit();
-    });
+  function togglePause() {
+    paused = !paused;
+    updatePauseIcon();
+  }
 
-    window.addEventListener("mousemove", (e) => {
-      if (!throughOn || !bridge) return;
+  // Show the chrome and (re)arm the idle hide timer.
+  function revealChrome() {
+    if (chromeHidden) {
+      chromeHidden = false;
+      document.body.classList.remove("chrome-hidden");
+    }
+    hideAt = performance.now() + CHROME_HIDE_MS;
+  }
+  // Called every frame: hide once idle (but never mid-drag).
+  function tickChrome(now) {
+    if (!chromeHidden && !drag && now > hideAt) {
+      chromeHidden = true;
+      document.body.classList.add("chrome-hidden");
+    }
+  }
+
+  async function refreshBounds() {
+    if (bridge) cachedBounds = await bridge.getBounds();
+  }
+
+  // --- move (drag the controls bar) ---
+  function beginMove(e) {
+    if (throughOn || !bridge || !cachedBounds) return;
+    drag = {
+      mode: "move",
+      grabX: e.screenX - cachedBounds.x,
+      grabY: e.screenY - cachedBounds.y,
+    };
+    document.body.classList.add("managing");
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+  }
+
+  // --- resize (drag a grip) ---
+  function beginResize(e, edge) {
+    if (throughOn || !bridge || !cachedBounds) return;
+    e.stopPropagation();
+    drag = {
+      mode: "resize",
+      edge,
+      start: { ...cachedBounds },
+      sx: e.screenX,
+      sy: e.screenY,
+    };
+    document.body.classList.add("managing");
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch (_) {}
+  }
+
+  function onPointerMove(e) {
+    // Reveal when the cursor is in the top-left zone or over the chrome.
+    if (e.clientX < REVEAL_W && e.clientY < REVEAL_H) revealChrome();
+
+    // Keep the come-back buttons clickable while click-through is on.
+    if (throughOn && bridge) {
       const r = el.controls.getBoundingClientRect();
-      const pad = 6;
+      const pad = 8;
       const over =
         e.clientX >= r.left - pad &&
         e.clientX <= r.right + pad &&
         e.clientY >= r.top - pad &&
         e.clientY <= r.bottom + pad;
       bridge.setInteractive(over);
-    });
+      if (over) revealChrome();
+    }
+
+    if (!drag || !bridge) return;
+    revealChrome();
+    if (drag.mode === "move") {
+      const x = e.screenX - drag.grabX;
+      const y = e.screenY - drag.grabY;
+      cachedBounds = { ...cachedBounds, x, y };
+      bridge.setBounds(cachedBounds);
+    } else {
+      const MINW = 320,
+        MINH = 240;
+      let { x, y, width, height } = drag.start;
+      const dx = e.screenX - drag.sx;
+      const dy = e.screenY - drag.sy;
+      const ed = drag.edge;
+      if (ed.includes("e")) width = drag.start.width + dx;
+      if (ed.includes("s")) height = drag.start.height + dy;
+      if (ed.includes("w")) {
+        width = drag.start.width - dx;
+        x = drag.start.x + dx;
+      }
+      if (ed.includes("n")) {
+        height = drag.start.height - dy;
+        y = drag.start.y + dy;
+      }
+      if (width < MINW) {
+        if (ed.includes("w")) x -= MINW - width;
+        width = MINW;
+      }
+      if (height < MINH) {
+        if (ed.includes("n")) y -= MINH - height;
+        height = MINH;
+      }
+      cachedBounds = { x, y, width, height };
+      bridge.setBounds(cachedBounds);
+    }
+  }
+  function onPointerUp() {
+    if (!drag) return;
+    drag = null;
+    document.body.classList.remove("managing");
+    revealChrome();
+    refreshBounds();
   }
 
-  // Always wire the buttons (they work in a browser too, minus quit/through).
+  function setupControls() {
+    el.btnThrough.addEventListener("click", () => bridge && bridge.setThrough(!throughOn));
+    el.btnMode.addEventListener("click", toggleMode);
+    el.btnPause.addEventListener("click", togglePause);
+    el.btnQuit.addEventListener("click", () => bridge && bridge.quit());
+
+    // Drag the bar (but not a button) to move; double-click to go fullscreen.
+    el.controls.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button")) return;
+      beginMove(e);
+    });
+    el.controls.addEventListener("dblclick", (e) => {
+      if (e.target.closest("button")) return;
+      if (!throughOn && bridge) bridge.toggleFull();
+    });
+
+    // Resize grips.
+    el.frame.querySelectorAll(".grip").forEach((g) => {
+      g.addEventListener("pointerdown", (e) => beginResize(e, g.dataset.edge));
+    });
+
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", onPointerUp);
+    // Keep cached bounds fresh after any (incl. native edge) resize.
+    window.addEventListener("resize", refreshBounds);
+    // Any keypress counts as activity worth showing the chrome briefly? No —
+    // keep gameplay clean. Reveal only via mouse near the corner.
+  }
+
   setupControls();
+  updatePauseIcon();
+  refreshBounds();
 
   if (bridge) {
     bridge.onThrough((on) => {
       throughOn = on;
       document.body.classList.toggle("through", on);
+      revealChrome();
       // Coupling: click-through implies you're working behind it -> ambient.
       setMode(on ? "ambient" : "play");
     });
     bridge.onToggleMode(toggleMode);
-    bridge.onTogglePause(() => {
-      paused = !paused;
-    });
+    bridge.onTogglePause(togglePause);
+    bridge.onFull(() => refreshBounds());
     bridge.onShortcuts((map) => {
-      // Reflect the keys that actually bound into the bottom hint bar.
       const pretty = (a) =>
         a
           ? a
@@ -537,12 +686,12 @@
       const hints = document.getElementById("hints");
       if (hints) {
         hints.innerHTML =
-          "<span><b>← →</b> turn</span>" +
-          "<span><b>↑</b> thrust</span>" +
+          "<span><b>&larr; &rarr;</b> turn</span>" +
+          "<span><b>&uarr;</b> thrust</span>" +
           "<span><b>SPACE</b> fire</span>" +
+          "<span><b>drag top-left</b> move</span>" +
+          "<span><b>dbl-click</b> fullscreen</span>" +
           `<span><b>${pretty(map.through)}</b> through</span>` +
-          `<span><b>${pretty(map.mode)}</b> play/ambient</span>` +
-          `<span><b>${pretty(map.pause)}</b> pause</span>` +
           `<span><b>${pretty(map.quit)}</b> quit</span>`;
       }
     });
@@ -572,5 +721,14 @@
     press: (name, v) => {
       keys[name] = v;
     },
+    // chrome / window test hooks
+    chromeHidden: () => chromeHidden,
+    revealChrome,
+    hideChromeNow: () => {
+      hideAt = performance.now() - 1;
+    },
+    togglePause,
+    toggleMode,
+    popScore,
   };
 })();
